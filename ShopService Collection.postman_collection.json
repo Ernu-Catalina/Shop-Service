@@ -1,0 +1,62 @@
+{
+	"info": {
+		"_postman_id": "b9406770-ea92-466f-955d-5848a70e6dc2",
+		"name": "ShopService Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48647585",
+		"_collection_link": "https://catalina-ernu-1898933.postman.co/workspace/Catalina-Ernu's-Workspace~9eeefb57-bbf8-490b-82f1-f9ee1ab09fc8/collection/48647585-b9406770-ea92-466f-955d-5848a70e6dc2?action=share&source=collection_link&creator=48647585"
+	},
+	"item": [
+		{
+			"name": "List Shop Items",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/api/shop/itemsS",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"shop",
+						"itemsS"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Purchase Item",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"characterId\": 101,\r\n  \"itemId\": 1,\r\n  \"quantity\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/shop/purchase",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"shop",
+						"purchase"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
