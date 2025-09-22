@@ -1,4 +1,5 @@
 Shop Service
+Catalina Ernu, how would you like to 
 
 The Shop Service manages in-game items that characters can purchase and use during the game.
 It works together with the Character Service (for gold balance) and the Inventory Service (to store purchased items).
@@ -97,3 +98,22 @@ How to Run the Service
 Optional: You can also use the Python build_and_run.py script to automate steps 3-5:
 
 python build_and_run.py
+
+Running the Shop Service with Docker
+
+You can run the Shop Service locally using Docker or pull the prebuilt image from DockerHub.
+
+1. Pull the Docker Image
+docker pull catalinaernu/shopservice:1.0
+
+2. Run the Service
+docker run -d -p 5000:5000 --name shopservice catalinaernu/shopservice:1.0
+
+Note:
+- The -p flag maps your local machine’s port to the container port (host:container).
+- Ensure port 5000 is free.
+- Use docker ps to see running containers.
+- Use docker stop shopservice and docker rm shopservice to stop/remove the container.
+
+3. Access the APIs
+- Shop Service: http://localhost:5000/api/shop/items

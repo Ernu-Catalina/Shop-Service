@@ -1,29 +1,57 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Collections.Generic;
-using ShopService;
+using Microsoft.OpenApi.Models;
+using ShopService.Data;
+using ShopService.Repositories;
 
-namespace ShopService
+var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetValue<string>("POSTGRES_CONNECTION")
+                       ?? "Host=postgres-shop;Port=5432;Database=shopdb;Username=shopuser;Password=shoppass";
+
+// Add DbContext
+builder.Services.AddDbContext<ShopDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Add repository and controllers
+builder.Services.AddScoped<ShopRepository>();
+builder.Services.AddControllers();
+
+// Add Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    public class Program
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        Title = "Shop Service API",
+        Version = "v1",
+        Description = "API for managing in-game shop items"
+    });
+});
 
-            // Add services
-            builder.Services.AddControllers();
-            builder.Services.AddSingleton<ShopRepository>(); // register in-memory repo
+var app = builder.Build();
 
-            var app = builder.Build();
-
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.MapControllers();
-
-            app.Run();
-        }
-    }
-
+// Apply migrations at startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ShopDbContext>();
+    db.Database.Migrate();
 }
+
+// Enable Swagger middleware
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Shop Service API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+// Map controllers
+app.MapControllers();
+
+app.Run();
