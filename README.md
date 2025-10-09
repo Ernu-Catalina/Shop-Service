@@ -1,5 +1,4 @@
 Shop Service
-Catalina Ernu, how would you like to 
 
 The Shop Service manages in-game items that characters can purchase and use during the game.
 It works together with the Character Service (for gold balance) and the Inventory Service (to store purchased items).
