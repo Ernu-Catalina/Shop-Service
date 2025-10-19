@@ -1,0 +1,98 @@
+{
+  "info": {
+    "name": "ShopService",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get all items",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8085/shop/items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8085",
+          "path": ["shop", "items"]
+        }
+      }
+    },
+    {
+      "name": "Get available items for role (role 3)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8085/shop/items/available/3",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8085",
+          "path": ["shop","items","available","3"]
+        }
+      }
+    },
+    {
+      "name": "Get player role (character 123)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8085/shop/character/123/role",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8085",
+          "path": ["shop","character","123","role"]
+        }
+      }
+    },
+    {
+      "name": "Get player currency (character 123)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8085/shop/character/123/currency",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8085",
+          "path": ["shop","character","123","currency"]
+        }
+      }
+    },
+    {
+      "name": "Purchase item (character 123 buys item 1)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"characterId\": 123,\n  \"itemId\": 1\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8085/shop/purchase",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8085",
+          "path": ["shop","purchase"]
+        }
+      }
+    },
+    {
+      "name": "Mock: Get character inventory (for mock character)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4002/character/123/inventory",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "4002",
+          "path": ["character","123","inventory"]
+        }
+      }
+    }
+  ]
+}
