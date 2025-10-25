@@ -6,7 +6,7 @@ using ShopApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Kestrel
-builder.WebHost.ConfigureKestrel(o => o.ListenAnyIP(80));
+builder.WebHost.ConfigureKestrel(o => o.ListenAnyIP(8085));
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -36,11 +36,29 @@ builder.Services.AddHostedService<ServiceRegistration>();
 
 var app = builder.Build();
 
-// Ensure DB
+// Ensure DB with retry loop
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ShopDbContext>();
-    db.Database.Migrate();
+
+    var retries = 10; // Try 10 times
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            Console.WriteLine("Database connected and migrations applied.");
+            break;
+        }
+        catch
+        {
+            retries--;
+            Console.WriteLine("Waiting for database... retrying in 5 seconds");
+            await Task.Delay(5000);
+        }
+    }
+
+    if (retries == 0) throw new Exception("Failed to connect to database after multiple attempts.");
 }
 
 // Middlewares
@@ -55,11 +73,6 @@ app.UseRouting();
 app.MapControllers();
 
 // Health Check
-app.MapGet("/health", () =>
-{
-    var ts = DateTime.UtcNow;
-    Console.WriteLine($"[HEALTH] Health check requested at {ts:O}");
-    return Results.Json(new { status = "healthy", service = "shop-service", timestamp = ts });
-});
+app.MapGet("/health", () => Results.Json(new { status = "healthy" }));
 
 app.Run();

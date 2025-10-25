@@ -25,7 +25,7 @@ public class ServiceRegistration : IHostedService, IDisposable
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         var serviceName = _config["SERVICE_NAME"] ?? "unknown-service";
-        var port = _config["PORT"] ?? "80";
+        var port = _config["PORT"] ?? "8085";
         var discoveryUrl = _config["SERVICE_DISCOVERY_URL"] ?? "http://service_discovery:8500";
 
         var registrationData = new
@@ -42,19 +42,26 @@ public class ServiceRegistration : IHostedService, IDisposable
             }
         };
 
-        try
-        {
-            var client = _httpClientFactory.CreateClient();
-            var response = await client.PostAsJsonAsync($"{discoveryUrl}/register", registrationData, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            _logger.LogInformation("Service registered successfully with Service Discovery.");
+        var client = _httpClientFactory.CreateClient();
 
-            // Start heartbeats every 30s
-            _heartbeatTimer = new Timer(async _ => await SendHeartbeat(discoveryUrl), null, 30000, 30000);
-        }
-        catch (Exception ex)
+        // Retry loop for registration
+        while (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogError(ex, "Failed to register service.");
+            try
+            {
+                var response = await client.PostAsJsonAsync($"{discoveryUrl}/register", registrationData, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                _logger.LogInformation("Service registered successfully with Service Discovery.");
+
+                // Start heartbeat timer
+                _heartbeatTimer = new Timer(async _ => await SendHeartbeat(discoveryUrl), null, 30000, 30000);
+                break; // Exit loop after successful registration
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to register service. Retrying in 5 seconds...");
+                await Task.Delay(5000, cancellationToken);
+            }
         }
     }
 
