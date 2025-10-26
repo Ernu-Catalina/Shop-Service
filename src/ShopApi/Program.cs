@@ -5,9 +5,6 @@ using ShopApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Kestrel
-builder.WebHost.ConfigureKestrel(o => o.ListenAnyIP(8085));
-
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                        ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
