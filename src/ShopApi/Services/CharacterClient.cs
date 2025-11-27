@@ -1,86 +1,44 @@
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using Polly;
-using Polly.Retry;
+using System.Threading.Tasks;
+using Roleplay.Grpc;
 
 namespace ShopApi.Services
 {
     public class CharacterClient : ICharacterClient
     {
-        private readonly HttpClient _client;
-        private readonly ILogger<CharacterClient> _logger;
-        private readonly AsyncRetryPolicy _retryPolicy;
+        private readonly RoleplayService.RoleplayServiceClient _grpcClient;
 
-        public CharacterClient(HttpClient client, ILogger<CharacterClient> logger)
+        public CharacterClient(RoleplayService.RoleplayServiceClient grpcClient)
         {
-            _client = client;
-            _logger = logger;
-            _retryPolicy = Policy
-                .Handle<HttpRequestException>()
-                .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(200 * attempt));
+            _grpcClient = grpcClient;
         }
 
         public async Task<int?> GetRoleAsync(int characterId)
         {
-            return await _retryPolicy.ExecuteAsync(async () =>
-            {
-                var resp = await _client.GetAsync($"/character/{characterId}/role");
-                if (!resp.IsSuccessStatusCode) return null;
+            var req = new GetRoleRequest { CharacterId = characterId };
+            var reply = await _grpcClient.GetRoleAsync(req);
 
-                var obj = await resp.Content.ReadFromJsonAsync<CharacterRoleResponse>();
-                return obj?.RoleId;
-            });
+            if (reply == null) return null;
+
+            // return null for 0 if role not found, otherwise role id
+            return reply.RoleId == 0 ? (int?)null : reply.RoleId;
         }
 
         public async Task<int?> GetCurrencyAsync(int characterId)
         {
-            return await _retryPolicy.ExecuteAsync(async () =>
-            {
-                var resp = await _client.GetAsync($"/character/{characterId}/currency");
-                if (!resp.IsSuccessStatusCode) return null;
+            var req = new GetCurrencyRequest { CharacterId = characterId };
+            var reply = await _grpcClient.GetCurrencyAsync(req);
 
-                var obj = await resp.Content.ReadFromJsonAsync<CharacterCurrencyResponse>();
-                return obj?.CurrencyAmount;
-            });
+            if (reply == null) return null;
+
+            // return currency amount (use nullable if character not found)
+            return reply.Amount;
         }
 
         public async Task<CharacterInventoryAddResponse> AddItemToInventoryAsync(int characterId, int itemId)
         {
-            return await _retryPolicy.ExecuteAsync(async () =>
-            {
-                var resp = await _client.PostAsJsonAsync($"/character/{characterId}/inventory/add", new { item_id = itemId });
-
-                if (!resp.IsSuccessStatusCode)
-                {
-                    return new CharacterInventoryAddResponse
-                    {
-                        Success = false,
-                        Message = $"Character service returned {resp.StatusCode}"
-                    };
-                }
-
-                var obj = await resp.Content.ReadFromJsonAsync<CharacterInventoryAddResponse>();
-                return obj ?? new CharacterInventoryAddResponse { Success = true, Message = "ok" };
-            });
+            var req = new AddItemToInventoryRequest { CharacterId = characterId, ItemId = itemId };
+            var reply = await _grpcClient.AddItemToInventoryAsync(req);
+            return reply;
         }
-    }
-
-    // DTOs
-    public class CharacterRoleResponse
-    {
-        [JsonPropertyName("role_id")]
-        public int RoleId { get; set; }
-    }
-
-    public class CharacterCurrencyResponse
-    {
-        [JsonPropertyName("currency_amount")]
-        public int CurrencyAmount { get; set; }
-    }
-
-    public class CharacterInventoryAddResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
     }
 }

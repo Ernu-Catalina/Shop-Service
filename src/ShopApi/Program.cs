@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using ShopApi.Data;
 using ShopApi.Repos;
 using ShopApi.Services;
+using Roleplay.Grpc;
+using Grpc.Net.ClientFactory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,22 +16,21 @@ builder.Services.AddDbContext<ShopDbContext>(o => o.UseNpgsql(connectionString))
 var redisConfig = builder.Configuration["Redis:Configuration"] ?? builder.Configuration["REDIS__CONFIG"] ?? "localhost:6379";
 builder.Services.AddStackExchangeRedisCache(o => o.Configuration = redisConfig);
 
-// Character Client
-var characterUrl = builder.Configuration["CharacterService:Url"] ?? builder.Configuration["CHARACTER_SERVICE_URL"] ?? "http://localhost:4002";
-builder.Services.AddHttpClient<ICharacterClient, CharacterClient>(c =>
-{
-    c.BaseAddress = new Uri(characterUrl);
-    c.Timeout = TimeSpan.FromSeconds(5);
-});
+// gRPC client for Roleplay service
+var roleplayAddress = builder.Configuration["ROLEPLAY_GRPC_URL"] ?? "http://roleplay:50051";
+builder.Services.AddGrpcClient<RoleplayService.RoleplayServiceClient>(o => o.Address = new Uri(roleplayAddress));
 
-// DI
+// Register application services
+builder.Services.AddScoped<ICharacterClient, CharacterClient>(); // gRPC-backed wrapper
 builder.Services.AddScoped<ItemRepository>();
+builder.Services.AddHostedService<ServiceRegistration>();
+
+// General HTTP client factory (keep for other uses)
+builder.Services.AddHttpClient();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient();
-builder.Services.AddHostedService<ServiceRegistration>();
 
 var app = builder.Build();
 
@@ -37,8 +38,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ShopDbContext>();
-
-    var retries = 10; // Try 10 times
+    var retries = 10;
     while (retries > 0)
     {
         try
@@ -54,7 +54,6 @@ using (var scope = app.Services.CreateScope())
             await Task.Delay(5000);
         }
     }
-
     if (retries == 0) throw new Exception("Failed to connect to database after multiple attempts.");
 }
 
@@ -68,8 +67,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.MapControllers();
-
-// Health Check
 app.MapGet("/health", () => Results.Json(new { status = "healthy" }));
 
 app.Run();

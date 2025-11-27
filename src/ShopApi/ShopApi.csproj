@@ -19,4 +19,15 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+    <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" Version="2.56.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.56.0" PrivateAssets="All" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.56.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.25.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="protos\roleplay.proto" GrpcServices="Client" />
+  </ItemGroup>
+
 </Project>

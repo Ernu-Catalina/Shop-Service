@@ -1,0 +1,2 @@
+obj\Debug\net9.0\protos/Roleplay.cs \
+obj\Debug\net9.0\protos/RoleplayGrpc.cs: protos/roleplay.proto
